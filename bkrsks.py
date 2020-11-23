@@ -272,7 +272,7 @@ while (s < l):
         header2['Accept-Language'] = 'zh-CN,zh;q=0.8,en-US;q=0.6,en;q=0.5;q=0.4'
         header2['Cookie'] = 'ASP.NET_SessionId=dskyxykydaqfboxcxzhzsm4r'
         sid = 3959
-        while (sid <= 4000):
+        while (sid <= 4028):
             savedata = 'vUserInfo_ID=' + str(userid) + '&vRefParentId=' + str(
                 sid) + '&vCurrentPos=5000&myCurrentsession_time=01:01:45&random=99.7548329067212136'
             tt = requests.post(http + host + saveurl, headers=header2, data=savedata)
