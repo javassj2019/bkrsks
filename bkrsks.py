@@ -43,7 +43,7 @@ def Typeuserid():
     userPassword = input()
     # 用户查重
     checkuid = cur.execute('select UserID from User where UserID = (%s)', (userAccount))
-    print(checkuid)
+    #print(checkuid)
     if (checkuid == 0):
         cur.execute('insert into User(UserID,UserPassword,Study) VALUES (%s,%s,%s)', (userAccount, userPassword, 0))
         conn.commit()
