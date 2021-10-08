@@ -3,10 +3,11 @@ import requests
 import re
 import collections
 import pymysql
-
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 ###正文开始
 ##网站访问的基本信息
-http = 'http://'
+http = 'https://'
 host = 'm.bk.lxsk.com'
 loginurl = '/WebAppLogin/Index'
 userinfo = '/UserInfo/Index'
@@ -213,14 +214,14 @@ def kaoshi ():
     header5['Content-Type'] = 'application/x-www-form-urlencoded;charset=UTF-8'
     tt = requests.post(http + apiurl + savepaperurl, headers=header5, data=applyid + danxuan + duoxuan + panduan)
     print(tt.text)
-    #提交考试答案，提交即交卷
-    finshurl = '/api/CheckPaper/FinishedTest?vApplyDetailID=' + sjid[0]
-    requests.options(http + apiurl + finshurl,headers=header4)
-    tt = requests.get(http + apiurl + finshurl, headers=header5)
-    fenshu = tt.text
-    cur.execute('UPDATE User SET Exem = (%s) WHERE UserID = (%s)', (fenshu,username))
-    conn.commit()
-    print('考试结束，分数已录入',fenshu)
+    # #提交考试答案，提交即交卷
+    # finshurl = '/api/CheckPaper/FinishedTest?vApplyDetailID=' + sjid[0]
+    # requests.options(http + apiurl + finshurl,headers=header4)
+    # tt = requests.get(http + apiurl + finshurl, headers=header5)
+    # fenshu = tt.text
+    # cur.execute('UPDATE User SET Exem = (%s) WHERE UserID = (%s)', (fenshu,username))
+    # conn.commit()
+    # print('考试结束，分数已录入',fenshu)
 
 
 
@@ -245,14 +246,18 @@ while (s < l):
         username = tt1['UserID']
         passwd = tt1['UserPassword']
         logindata = 'UserName=' + username + '&Password=' + passwd + '&txtCheckCode=6455'
-        requests.get(http + host + loginurl, headers=header1)
-        requests.post(http + host + loginurl, headers=header1, data=logindata)
-        tt = requests.get(http + host + userinfo, headers=header1)
+        print('开始访问')
+        tt1 = requests.get(http + host + loginurl, headers=header1, verify=False)
+        # print(tt1.text)
+        tt2 = requests.post(http + host + loginurl, headers=header1, data=logindata, verify=False)
+        # print(tt2.text)
+        tt = requests.get(http + host + userinfo, headers=header1, verify=False)
+        # print(tt.text)
         uid = '<input type="hidden" id="hid_User_ID"  value="(.*)"/>'
         upsw = '<input type="hidden" id="hid_Password" value="(.*)" />'
         userid = re.findall(uid, tt.text)[0]
         userpasswd = re.findall(upsw, tt.text)[0]
-        tt = requests.get(http + host + desktop, headers=header1)
+        tt = requests.get(http + host + desktop, headers=header1, verify=False)
         # print(tt.text)
         name = '<font color="yellow">(.*)</font>'
         hyname = re.findall(name, tt.text)[0]
@@ -271,11 +276,12 @@ while (s < l):
         header2['Accept-Encoding'] = 'gzip, deflate'
         header2['Accept-Language'] = 'zh-CN,zh;q=0.8,en-US;q=0.6,en;q=0.5;q=0.4'
         header2['Cookie'] = 'ASP.NET_SessionId=dskyxykydaqfboxcxzhzsm4r'
-        sid = 3959
-        while (sid <= 4028):
+        sid = 4029
+        while (sid <= 4041):
             savedata = 'vUserInfo_ID=' + str(userid) + '&vRefParentId=' + str(
                 sid) + '&vCurrentPos=5000&myCurrentsession_time=01:01:45&random=99.7548329067212136'
-            tt = requests.post(http + host + saveurl, headers=header2, data=savedata)
+            tt = requests.post(http + host + saveurl, headers=header2, data=savedata, verify=False)
+            print(tt.text)
             sid = sid + 1
 
         cur.execute('UPDATE User SET Name = (%s) WHERE UserID = (%s)', (hyname, username))
