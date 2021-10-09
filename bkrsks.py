@@ -7,7 +7,8 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 ###正文开始
 ##网站访问的基本信息
-http = 'https://'
+http = 'http://'
+https = 'https://'
 host = 'm.bk.lxsk.com'
 loginurl = '/WebAppLogin/Index'
 userinfo = '/UserInfo/Index'
@@ -20,13 +21,13 @@ header1 = collections.OrderedDict()
 header1['Host'] = host
 header1['Connection'] = 'keep-alive'
 header1['Cache-Control'] = 'max-age=0'
-header1['Origin'] = http + host
+header1['Origin'] = https + host
 header1['Upgrade-Insecure-Requests'] = '1'
 header1[
     'User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36'
 header1['Content-Type'] = 'application/x-www-form-urlencoded'
 header1['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
-header1['Referer'] = http + host + loginurl
+header1['Referer'] = https + host + loginurl
 header1['Accept-Encoding'] = 'gzip, deflate'
 header1['Accept-Language'] = 'zh-CN,zh;q=0.8,en-US;q=0.6,en;q=0.5;q=0.4'
 header1['Cookie'] = 'ASP.NET_SessionId=dskyxykydaqfboxcxzhzsm4r'
@@ -54,7 +55,7 @@ def Typeuserid():
 # 考试答案与提交
 def kaoshi ():
     # 获取考试必要信息
-    tt = requests.get(http + host + '/WebAppUser_Subject_Relation/ExamIndex', headers=header2)
+    tt = requests.get(https + host + '/WebAppUser_Subject_Relation/ExamIndex', headers=header2)
     r = 'id="hid_KeyId" value="(.*)"/>'
     keyid = re.findall(r, tt.text)
     apiurl = 'bkpxkswebapi.lxsk.com'
@@ -202,7 +203,7 @@ def kaoshi ():
     header4['Connection'] = 'keep - alive'
     header4['Access-Control-Request-Method'] = 'POST'
     header4['Accept'] = '* / *'
-    header4['Origin'] = http + host
+    header4['Origin'] = https + host
     header4['User - Agent'] = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36'
     header4['DNT'] = '1'
     header4['Accept - Encoding'] = 'gzip, deflate'
@@ -214,14 +215,14 @@ def kaoshi ():
     header5['Content-Type'] = 'application/x-www-form-urlencoded;charset=UTF-8'
     tt = requests.post(http + apiurl + savepaperurl, headers=header5, data=applyid + danxuan + duoxuan + panduan)
     print(tt.text)
-    # #提交考试答案，提交即交卷
-    # finshurl = '/api/CheckPaper/FinishedTest?vApplyDetailID=' + sjid[0]
-    # requests.options(http + apiurl + finshurl,headers=header4)
-    # tt = requests.get(http + apiurl + finshurl, headers=header5)
-    # fenshu = tt.text
-    # cur.execute('UPDATE User SET Exem = (%s) WHERE UserID = (%s)', (fenshu,username))
-    # conn.commit()
-    # print('考试结束，分数已录入',fenshu)
+    #提交考试答案，提交即交卷
+    finshurl = '/api/CheckPaper/FinishedTest?vApplyDetailID=' + sjid[0]
+    requests.options(http + apiurl + finshurl,headers=header4)
+    tt = requests.get(http + apiurl + finshurl, headers=header5)
+    fenshu = tt.text
+    cur.execute('UPDATE User SET Exem = (%s) WHERE UserID = (%s)', (fenshu,username))
+    conn.commit()
+    print('考试结束，分数已录入',fenshu)
 
 
 
@@ -247,17 +248,17 @@ while (s < l):
         passwd = tt1['UserPassword']
         logindata = 'UserName=' + username + '&Password=' + passwd + '&txtCheckCode=6455'
         print('开始访问')
-        tt1 = requests.get(http + host + loginurl, headers=header1, verify=False)
+        tt1 = requests.get(https + host + loginurl, headers=header1, verify=False)
         # print(tt1.text)
-        tt2 = requests.post(http + host + loginurl, headers=header1, data=logindata, verify=False)
+        tt2 = requests.post(https + host + loginurl, headers=header1, data=logindata, verify=False)
         # print(tt2.text)
-        tt = requests.get(http + host + userinfo, headers=header1, verify=False)
+        tt = requests.get(https + host + userinfo, headers=header1, verify=False)
         # print(tt.text)
         uid = '<input type="hidden" id="hid_User_ID"  value="(.*)"/>'
         upsw = '<input type="hidden" id="hid_Password" value="(.*)" />'
         userid = re.findall(uid, tt.text)[0]
         userpasswd = re.findall(upsw, tt.text)[0]
-        tt = requests.get(http + host + desktop, headers=header1, verify=False)
+        tt = requests.get(https + host + desktop, headers=header1, verify=False)
         # print(tt.text)
         name = '<font color="yellow">(.*)</font>'
         hyname = re.findall(name, tt.text)[0]
@@ -268,7 +269,7 @@ while (s < l):
         header2['Host'] = host
         header2['Connection'] = 'keep-alive'
         header2['Accept'] = 'application/json, text/javascript, */*; q=0.01'
-        header2['Origin'] = http + host
+        header2['Origin'] = https + host
         header2['X-Requested-With'] = 'XMLHttpRequest'
         header2[
             'User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36 QBCore/4.0.1301.400 QQBrowser/9.0.2524.400 Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2875.116 Safari/537.36 NetType/WIFI MicroMessenger/7.0.5 WindowsWechat'
@@ -280,7 +281,7 @@ while (s < l):
         while (sid <= 4041):
             savedata = 'vUserInfo_ID=' + str(userid) + '&vRefParentId=' + str(
                 sid) + '&vCurrentPos=5000&myCurrentsession_time=01:01:45&random=99.7548329067212136'
-            tt = requests.post(http + host + saveurl, headers=header2, data=savedata, verify=False)
+            tt = requests.post(https + host + saveurl, headers=header2, data=savedata, verify=False)
             print(tt.text)
             sid = sid + 1
 
