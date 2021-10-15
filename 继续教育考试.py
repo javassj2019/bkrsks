@@ -37,21 +37,21 @@ conn = pymysql.connect(host='cdb-kce5k8kq.bj.tencentcdb.com', user='root', passw
 cur = conn.cursor(pymysql.cursors.DictCursor)  # 生成游标
 
 
-# # 录入新用户
-# def Typeuserid():
-#     print('请输入用户名：')
-#     userAccount = input()
-#     print('请输入密码：')
-#     userPassword = input()
-#     # 用户查重
-#     checkuid = cur.execute('select UserID from User where UserID = (%s)', (userAccount))
-#     #print(checkuid)
-#     if (checkuid == 0):
-#         cur.execute('insert into User(UserID,UserPassword,Study) VALUES (%s,%s,%s)', (userAccount, userPassword, 0))
-#         conn.commit()
-#         print('用户添加完成')
-#     else:
-#         print('用户已存在，无需再次添加')
+# 录入新用户
+def Typeuserid():
+    print('请输入用户名：')
+    userAccount = input()
+    print('请输入密码：')
+    userPassword = input()
+    # 用户查重
+    checkuid = cur.execute('select UserID from User where UserID = (%s)', (userAccount))
+    #print(checkuid)
+    if (checkuid == 0):
+        cur.execute('insert into User(UserID,UserPassword,Study) VALUES (%s,%s,%s)', (userAccount, userPassword, 0))
+        conn.commit()
+        print('用户添加完成')
+    else:
+        print('用户已存在，无需再次添加')
 # 考试答案与提交
 def kaoshi ():
     # 获取考试必要信息
@@ -84,7 +84,6 @@ def kaoshi ():
     tt = requests.get(http + apiurl + sjurl, headers=headertoken)
     print(http + apiurl + sjurl)
     print(tt.request.headers)
-
     print(tt.text)
     r = '"(.*)"'
     sjid = re.findall(r, tt.text)
@@ -202,7 +201,7 @@ def kaoshi ():
     header3['Accept - Encoding'] = 'gzip, deflate'
     header3['Accept - Language'] = 'zh - CN, zh;q = 0.9'
 
-    tt = requests.post(http+apiurl+tokenurl,headers=header3 ,data = tokendata)
+    tt = requests.post(http+apiurl+tokenurl, headers=header3, data=tokendata)
     kk = json.loads(tt.text)
     access_token = kk['access_token']
     headertoken['Authorization'] = 'bearer ' + access_token
@@ -222,15 +221,16 @@ def kaoshi ():
     header5['Authorization'] = 'bearer ' + access_token
     header5['Content-Type'] = 'application/x-www-form-urlencoded;charset=UTF-8'
     tt = requests.post(http + apiurl + savepaperurl, headers=header5, data=applyid + danxuan + duoxuan + panduan)
-    # print(tt.text)
-    # #提交考试答案，提交即交卷
-    # finshurl = '/api/CheckPaper/FinishedTest?vApplyDetailID=' + sjid[0]
-    # requests.options(http + apiurl + finshurl,headers=header4)
-    # tt = requests.get(http + apiurl + finshurl, headers=header5)
-    # fenshu = tt.text
-    # cur.execute('UPDATE User SET Exem = (%s) WHERE UserID = (%s)', (fenshu,username))
-    # conn.commit()
-    # print('考试结束，分数已录入',fenshu)
+    print(tt.text)
+    #提交考试答案，提交即交卷
+    finshurl = '/api/CheckPaper/FinishedTest?vApplyDetailID=' + sjid[0]
+    requests.options(http + apiurl + finshurl,headers=header4)
+    tt = requests.get(http + apiurl + finshurl, headers=header5)
+    fenshu = tt.text
+    cur.execute('UPDATE User SET Exem = (%s) WHERE UserID = (%s)', (fenshu,username))
+    cur.execute('UPDATE User SET Study = 2 WHERE UserID = (%s)', (username))
+    conn.commit()
+    print('考试结束，分数已录入',fenshu)
 
 
 
@@ -285,16 +285,16 @@ while (s < l):
         header2['Accept-Encoding'] = 'gzip, deflate'
         header2['Accept-Language'] = 'zh-CN,zh;q=0.8,en-US;q=0.6,en;q=0.5;q=0.4'
         header2['Cookie'] = 'ASP.NET_SessionId=dskyxykydaqfboxcxzhzsm4r'
-        # sid = 4029
-        # while (sid <= 4041):
-        #     savedata = 'vUserInfo_ID=' + str(userid) + '&vRefParentId=' + str(
-        #         sid) + '&vCurrentPos=5000&myCurrentsession_time=01:01:45&random=99.7548329067212136'
-        #     tt = requests.post(https + host + saveurl, headers=header2, data=savedata, verify=False)
-        #     print(tt.text)
-        #     sid = sid + 1
+        sid = 4029
+        while (sid <= 4041):
+            savedata = 'vUserInfo_ID=' + str(userid) + '&vRefParentId=' + str(
+                sid) + '&vCurrentPos=5000&myCurrentsession_time=01:01:45&random=99.7548329067212136'
+            tt = requests.post(https + host + saveurl, headers=header2, data=savedata, verify=False)
+            print(tt.text)
+            sid = sid + 1
 
-        # cur.execute('UPDATE User SET Name = (%s) WHERE UserID = (%s)', (hyname, username))
-        # cur.execute('UPDATE User SET Study = 1 WHERE UserID = (%s)', (username))
+        cur.execute('UPDATE User SET Name = (%s) WHERE UserID = (%s)', (hyname, username))
+        cur.execute('UPDATE User SET Study = 1 WHERE UserID = (%s)', (username))
         conn.commit()
         kaoshi()
         l = k - 1
