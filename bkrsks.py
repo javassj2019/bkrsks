@@ -1,10 +1,16 @@
 import json
+import time
+from PIL import Image
+from pytesseract import *
+from selenium import webdriver
 import requests
 import re
 import collections
 import pymysql
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+code = 'utf8'
 ###正文开始
 ##网站访问的基本信息
 http = 'http://'
@@ -35,9 +41,99 @@ header1['Cookie'] = 'ASP.NET_SessionId=dskyxykydaqfboxcxzhzsm4r'
 conn = pymysql.connect(host='cdb-kce5k8kq.bj.tencentcdb.com', user='root', passwd='a159753A!', port=10264,
                        charset='utf8', db='rsks')
 cur = conn.cursor(pymysql.cursors.DictCursor)  # 生成游标
+def huoqushijuanbianhao ():
+    #一、模拟登录
+    base_url = 'https://bk.lxsk.com/'
+    browser = webdriver.Chrome()
+    browser.maximize_window()
+    browser.implicitly_wait(10)
+    oldhandle = browser.current_window_handle
+    browser.get(base_url)
+    # (1)登录页面截图
+    browser.save_screenshot("D:/pic.png")  # 可以修改保存地址
+    # (2)基操
+    browser.find_element(by='id', value='ctl00_txtUserName').send_keys(username)
+    browser.find_element(by='id', value='ctl00_txtPassWord').send_keys(passwd)
+    time.sleep(2)
+    # (3)获取图片验证码坐标+
+    xpathstr = '/html/body/form/div[5]/table/tbody/tr/td[6]/table/tbody/tr/td[2]/img'
+    code_ele = browser.find_element(by='xpath', value=xpathstr)
+    print("验证码的坐标为：", code_ele.location)  # 控制台查看{'x': 1086, 'y': 368}
+    print("验证码的大小为：", code_ele.size)  # 图片大小{'height': 40, 'width': 110}
+    # (4)图片4个点的坐标位置
+    left = code_ele.location['x']  # x点的坐标
+    top = code_ele.location['y']  # y点的坐标
+    right = code_ele.size['width'] + left  # 上面右边点的坐标
+    height = code_ele.size['height'] + top  # 下面右边点的坐标
+    PIC = Image.open('D:/pic.png')
+    # (4)将图片验证码截取
+    code_image = PIC.crop((left, top, right, height))
+    code_image.save('D:/pic1.png')  # 截取的验证码图片保存为新的文件
+    time.sleep(3)
+    im = Image.open('D:/pic1.png')
+    # 图片的处理过程
+    im = im.convert('RGBA')
+    pixdata = im.load()
+    # 非字符区域刷白
+    for y in range(0, 23, 1):
+        for x in range(0, 7, 1):
+            pixdata[x, y] = (0, 0, 0, 0)
+    for y in range(0, 23, 1):
+        for x in range(14, 16, 1):
+            pixdata[x, y] = (0, 0, 0, 0)
+    for y in range(0, 23, 1):
+        for x in range(24, 25, 1):
+            pixdata[x, y] = (0, 0, 0, 0)
+    for y in range(0, 23, 1):
+        for x in range(33, 34, 1):
+            pixdata[x, y] = (0, 0, 0, 0)
+    for y in range(0, 23, 1):
+        for x in range(42, 48, 1):
+            pixdata[x, y] = (0, 0, 0, 0)
+    for y in range(0, 5, 1):
+        for x in range(48):
+            pixdata[x, y] = (0, 0, 0, 0)
+    for y in range(18, 23, 1):
+        for x in range(48):
+            pixdata[x, y] = (0, 0, 0, 0)
+    for y in range(23):
+        for x in range(48):
+            if pixdata[x, y][0] > 120:
+                if pixdata[x, y][1] > 150:
+                    pixdata[x, y] = (0, 0, 0, 0)
 
+    im.save('D:/pic2.png', 'PNG')
+    # im.show()
+    aa = pytesseract.image_to_string(im, config='outputbase digits')
+    checkcode = (aa.strip())
+    print(checkcode)
+    browser.find_element(by='id', value='ctl00_txtCheckCode').send_keys(checkcode)
+    loginbtn = browser.find_element(by='id', value='ctl00_BtnLogin')
+    loginbtn.click()
+    time.sleep(3)
+    browser.switch_to.alert.accept()
+    #点击到考试页面
+    exambtn = browser.find_element(by='xpath',value='//*[@id="top-nav"]/li[4]/a')
+    exambtn.click()
+    time.sleep(3)
+    browser.switch_to.alert.accept()
+    browser.find_element(by='xpath',value='//*[@id="ctl00_ContentPlaceHolder1_dg"]/tbody/tr[2]/td[9]/a').click()
+    time.sleep(2)
+    allhandle = browser.window_handles
+    for handle in allhandle:
+        if handle != oldhandle:
+            newhandle = handle
+    browser.switch_to.window(newhandle)
+    time.sleep(1)
+    browser.find_element(by='xpath',value='//*[@id="BtnClickLogin"]').click()
+    time.sleep(2)
+    # urlstring = browser.current_url
+    # r = 'ApplyDetailID=(.*)&SubjectId'
+    # sjid = re.findall(r,urlstring)
+    browser.close()
+    # return sjid[0]
 
-# 录入新用户
+# # 录入新用户
 def Typeuserid():
     print('请输入用户名：')
     userAccount = input()
@@ -54,10 +150,12 @@ def Typeuserid():
         print('用户已存在，无需再次添加')
 # 考试答案与提交
 def kaoshi ():
+    #使用模拟方法登录并获取试卷编号
+    huoqushijuanbianhao()
     # 获取考试必要信息
     tt = requests.get(https + host + '/WebAppUser_Subject_Relation/ExamIndex', headers=header2, verify=False)
     r = 'id="hid_KeyId" value="(.*)"/>'
-    keyid = re.findall(r, tt.text)
+    Keyid = re.findall(r, tt.text)
     apiurl = 'bkpxkswebapi.lxsk.com'
     tokenurl = '/api/token'
     tokendata = 'grant_type=password&username=' + username + '&password=' + userpasswd
@@ -74,22 +172,19 @@ def kaoshi ():
     Subject_ID = dd['rows'][0]['cell'][1]
     PaperID = dd['rows'][0]['cell'][3]
     NumberNO = dd['rows'][0]['cell'][4]
-    sjurl = '/api/Examing/PrepareTest?vSubjectId=' + Subject_ID + '&vNumberNO=' + NumberNO + '&vPaperID=' + PaperID + '&vUser_ID=' + userid
+    qsjurl = '/api/Examing/PrepareTest?vSubjectId=' + Subject_ID + '&vNumberNO=' + NumberNO + '&vPaperID=' + PaperID + '&vUser_ID=' + userid
+    # qsjurl ='/User_Subject/EntryExamRoom.aspx?PaperID=' + PaperID + '&NumberNO=' + NumberNO + '&SubjectId=' + Subject_ID + '&KeyId=' + Keyid[0]
     tt = requests.post(http + apiurl + tokenurl, data=tokendata)
-    print(http + apiurl + tokenurl)
-    print(tokendata)
     dd = json.loads(tt.text)
     access_token = dd['access_token']
     headertoken['Authorization'] = 'bearer ' + access_token
-    tt = requests.get(http + apiurl + sjurl, headers=headertoken)
-    print(http + apiurl + sjurl)
-    print(tt.request.headers)
-    print(tt.text)
-    r = '"(.*)"'
-    sjid = re.findall(r, tt.text)
-    sjurl = '/api/PaperData/GetPaperData?_ApplyDetailID=' + sjid[0]
-    tt = requests.get(http + apiurl + sjurl, headers=headertoken)
+    tt = requests.get(http + apiurl + qsjurl, headers=headertoken)
 
+    r = '"(.*)"'
+    sjid = re.findall(r, tt.text)[0]
+
+    sjurl = '/api/PaperData/GetPaperData?_ApplyDetailID=' + sjid
+    tt = requests.get(http + apiurl + sjurl, headers=headertoken)
     date = tt.text
     dd = json.loads(date)
     for i in range(20):
@@ -132,9 +227,11 @@ def kaoshi ():
             print('有一道判断题不存在，试题编号为' + UUIDB)
     conn.commit()
 
-    begintesturl = '/api/Examing/BeginTest?vApplyDetailID=' + sjid[0]
-    requests.get(http + apiurl + begintesturl, headers=headertoken)
+    begintesturl = '/api/Examing/BeginTest?vApplyDetailID=' + sjid
+    tt = requests.get(http + apiurl + begintesturl, headers=headertoken)
+    print('开始考试卷'+ tt.text )
     tt = requests.post(http + apiurl + tokenurl, data=tokendata)
+    print('得到秘钥' + tt.text)
     kk = json.loads(tt.text)
     access_token = kk['access_token']
     headertoken['Authorization'] = 'bearer ' + access_token
@@ -178,7 +275,7 @@ def kaoshi ():
             daan = cur.fetchone()
             danalistB.insert(i, daan['answer'][0])
             # print(danalistB)
-    applyid = 'ApplyDetailID=' + sjid[0]
+    applyid = 'ApplyDetailID=' + sjid
     danxuan = '&RubricSWrite='
     duoxuan = '&RubricDWrite='
     panduan = '&RubricBWrite='
@@ -201,7 +298,7 @@ def kaoshi ():
     header3['Accept - Encoding'] = 'gzip, deflate'
     header3['Accept - Language'] = 'zh - CN, zh;q = 0.9'
 
-    tt = requests.post(http+apiurl+tokenurl, headers=header3, data=tokendata)
+    tt = requests.post(http+apiurl+tokenurl,headers=header3 ,data = tokendata)
     kk = json.loads(tt.text)
     access_token = kk['access_token']
     headertoken['Authorization'] = 'bearer ' + access_token
@@ -223,7 +320,7 @@ def kaoshi ():
     tt = requests.post(http + apiurl + savepaperurl, headers=header5, data=applyid + danxuan + duoxuan + panduan)
     print(tt.text)
     #提交考试答案，提交即交卷
-    finshurl = '/api/CheckPaper/FinishedTest?vApplyDetailID=' + sjid[0]
+    finshurl = '/api/CheckPaper/FinishedTest?vApplyDetailID=' + sjid
     requests.options(http + apiurl + finshurl,headers=header4)
     tt = requests.get(http + apiurl + finshurl, headers=header5)
     fenshu = tt.text
@@ -236,13 +333,13 @@ def kaoshi ():
 
 
 
-# print('需要添加新用户吗？Yes')
-# checktype = input()
-# if (checktype == 'Y'):
-#     i = 0
-#     while (i <= 100):
-#         Typeuserid()
-#         i = i + 1
+print('需要添加新用户吗？Yes')
+checktype = input()
+if (checktype == 'Y'):
+    i = 0
+    while (i <= 100):
+        Typeuserid()
+        i = i + 1
 s = 0
 l = cur.execute('select UserID,UserPassword from User where Study = 0')
 while (s < l):
@@ -294,7 +391,7 @@ while (s < l):
             sid = sid + 1
 
         cur.execute('UPDATE User SET Name = (%s) WHERE UserID = (%s)', (hyname, username))
-        cur.execute('UPDATE User SET Study = 1 WHERE UserID = (%s)', (username))
+        cur.execute('UPDATE User SET Study = 0 WHERE UserID = (%s)', (username))
         conn.commit()
         kaoshi()
         l = k - 1
