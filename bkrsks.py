@@ -75,28 +75,28 @@ def huoqushijuanbianhao ():
     im = im.convert('RGBA')
     pixdata = im.load()
     # 非字符区域刷白
-    for y in range(0, 23, 1):
+    for y in range(24):
         for x in range(0, 7, 1):
             pixdata[x, y] = (0, 0, 0, 0)
-    for y in range(0, 23, 1):
+    for y in range(24):
         for x in range(14, 16, 1):
             pixdata[x, y] = (0, 0, 0, 0)
-    for y in range(0, 23, 1):
+    for y in range(24):
         for x in range(24, 25, 1):
             pixdata[x, y] = (0, 0, 0, 0)
-    for y in range(0, 23, 1):
+    for y in range(24):
         for x in range(33, 34, 1):
             pixdata[x, y] = (0, 0, 0, 0)
-    for y in range(0, 23, 1):
+    for y in range(24):
         for x in range(42, 48, 1):
             pixdata[x, y] = (0, 0, 0, 0)
     for y in range(0, 5, 1):
         for x in range(48):
             pixdata[x, y] = (0, 0, 0, 0)
-    for y in range(18, 23, 1):
+    for y in range(18, 24, 1):
         for x in range(48):
             pixdata[x, y] = (0, 0, 0, 0)
-    for y in range(23):
+    for y in range(24):
         for x in range(48):
             if pixdata[x, y][0] > 120:
                 if pixdata[x, y][1] > 150:
