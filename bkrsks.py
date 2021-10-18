@@ -111,6 +111,19 @@ def huoqushijuanbianhao ():
     loginbtn = browser.find_element(by='id', value='ctl00_BtnLogin')
     loginbtn.click()
     time.sleep(3)
+    alertcode = browser.switch_to.alert.text
+    r = '验证码'
+    err = re.findall(r, alertcode)
+    print(err)
+    if err:
+        print('验证码错了，重来')
+        browser.switch_to.alert.accept()
+        browser.close()
+        time.sleep(3)
+        kaoshi()
+        return
+    else:
+        print('验证码对了，继续')
     browser.switch_to.alert.accept()
     #点击到考试页面
     exambtn = browser.find_element(by='xpath',value='//*[@id="top-nav"]/li[4]/a')
@@ -131,7 +144,7 @@ def huoqushijuanbianhao ():
     # r = 'ApplyDetailID=(.*)&SubjectId'
     # sjid = re.findall(r,urlstring)
     browser.close()
-    # return sjid[0]
+    return
 
 # # 录入新用户
 def Typeuserid():
@@ -328,6 +341,7 @@ def kaoshi ():
     cur.execute('UPDATE User SET Study = 2 WHERE UserID = (%s)', (username))
     conn.commit()
     print('考试结束，分数已录入',fenshu)
+    return
 
 
 
